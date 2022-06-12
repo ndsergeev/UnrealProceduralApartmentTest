@@ -1,0 +1,53 @@
+[
+  {
+    "Transform" : {
+      "X" : 0,
+      "Y" : 0,
+      "Z" : 0,
+
+      "XOff" : 10,
+      "YOff" : 90,
+      "ZOff" : 50
+    },
+
+    "Subtract" : [
+      {
+        "Transform" : {
+          "X" : 0,
+          "Y" : 0,
+          "Z" : 0,
+
+          "XOff" : 5,
+          "YOff" : 18,
+          "ZOff" : 15
+        }
+      }
+    ]
+  },
+  {
+    "Transform" : {
+      "X" : 0,
+      "Y" : 0,
+      "Z" : 0,
+
+      "XOff" : 10,
+      "YOff" : 80,
+      "ZOff" : 50
+    },
+
+    "Subtract" : [
+      {
+        "Transform" : {
+          "X" : 0,
+          "Y" : 0,
+          "Z" : 0,
+
+          "XOff" : 24,
+          "YOff" : 19,
+          "ZOff" : 50
+        }
+      }
+    ]
+  }
+]
+  
