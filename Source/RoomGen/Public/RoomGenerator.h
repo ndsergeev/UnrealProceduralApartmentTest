@@ -25,7 +25,7 @@ public:
 	ARoomGenerator();
 
 protected:
-	UE::Geometry::FDynamicMesh3 TargetMesh;
+	UE::Geometry::FDynamicMesh3 *TargetMesh;
 	
 public:	
 	UPROPERTY(VisibleAnywhere)
@@ -34,13 +34,13 @@ public:
 
 	// this is for DynamicMesh3, it requires a different type
 	TArray<uint32> Triangles;
-	// TArray<int32> Triangles;
 	TArray<FVector2D> UVCoords;
 	TArray<FVector> Normals;
 	
     TArray<FProcMeshTangent> Tangents;
 
-	UMaterial *Material = nullptr;
+	UMaterial *Material;
 	
-	void GenerateCube(const TArray<FWall> &Walls);
+	FDynamicMesh3 GenerateCube(const FKube &Transform);
+	void GenerateRoom(const TArray<FWall> &Walls);
 };

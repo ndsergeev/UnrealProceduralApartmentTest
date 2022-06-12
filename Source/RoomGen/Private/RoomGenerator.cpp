@@ -2,12 +2,14 @@
 
 #include "RoomGenerator.h"
 #include "KismetProceduralMeshLibrary.h"
+#include "Operations/MeshBoolean.h"
 
 ARoomGenerator::ARoomGenerator()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	TargetMesh = new FDynamicMesh3;
 	
-	// MeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Dynamic Mesh Component"));
 	MeshComponent = CreateDefaultSubobject<UDynamicMeshComponent>(TEXT("Dynamic Mesh Component"));
 
 	for (const auto v : {
@@ -44,53 +46,17 @@ ARoomGenerator::ARoomGenerator()
 	UVCoords.Add(FVector2D(		0,	0.66f));
 }
 
-void ARoomGenerator::GenerateCube(const TArray<FWall> &Walls)
+FDynamicMesh3 ARoomGenerator::GenerateCube(const FKube &Transform)
 {
-// #ifdef UE_EDITOR
-// 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("GenerateCube, Have read the Struct, size: %i"), Walls.Num()));
-// #endif
-//
-// 	// TODO: this should be replaced with dynamic mesh...
-// 	TArray<FVector> Vertices;
-// 	Vertices.Add(FVector(0,   0,     0)); // 0
-// 	Vertices.Add(FVector(100, 0,     0)); // 1
-// 	Vertices.Add(FVector(100, 100,   0)); // 2
-// 	Vertices.Add(FVector(0,   100,   0)); // 3
-// 	Vertices.Add(FVector(0,   100, 100)); // 4
-// 	Vertices.Add(FVector(100, 100, 100)); // 5
-// 	Vertices.Add(FVector(100, 0,   100)); // 6
-// 	Vertices.Add(FVector(0,   0,   100)); // 7
-// 	
-// 	UKismetProceduralMeshLibrary::CalculateTangentsForMesh(Vertices, Triangles, UVCoords, Normals, Tangents);
-// 	MeshComponent->CreateMeshSection(0, Vertices, Triangles, Normals, UVCoords, TArray<FColor>(), Tangents, false);
-//
-//
-// 	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
-// 	Path = FPaths::Combine(Path, "/StarterContent/Materials/DefaultMaterial");
-// 	Material = LoadObject<UMaterial>(nullptr, *Path);
-// 	
-// 	if (Material != nullptr)
-// 	{
-// 		MeshComponent->SetMaterial(0, Material);
-// 	}
-// #ifdef UE_EDITOR
-// 	else
-// 	{
-// 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("IT DOES NOT WORK")));
-// 		// UE_LOG(LogTemp, Warning, TEXT("PATH: %s"), *Str);
-// 	}
-// #endif
-// 	
-	//TODO: I wish I can make the line below work...
 	UE::Geometry::FDynamicMesh3 DynamicMesh3;
-	DynamicMesh3.AppendVertex(FVector3d(0,   0,     0)); // 0
-	DynamicMesh3.AppendVertex(FVector3d(100, 0,     0)); // 1
-	DynamicMesh3.AppendVertex(FVector3d(100, 100,   0)); // 2
-	DynamicMesh3.AppendVertex(FVector3d(0,   100,   0)); // 3
-	DynamicMesh3.AppendVertex(FVector3d(0,   100, 100)); // 4
-	DynamicMesh3.AppendVertex(FVector3d(100, 100, 100)); // 5
-	DynamicMesh3.AppendVertex(FVector3d(100, 0,   100)); // 6
-	DynamicMesh3.AppendVertex(FVector3d(0,   0,   100)); // 7
+	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.Y,       Transform.Z)); // 0
+	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.Y,       Transform.Z)); // 1
+	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.YOff,    Transform.Z)); // 2
+	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.YOff,    Transform.Z)); // 3
+	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.YOff, Transform.ZOff)); // 4
+	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.YOff, Transform.ZOff)); // 5
+	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.Y,    Transform.ZOff)); // 6
+	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.Y,    Transform.ZOff)); // 7
 	
 	for (UE::Geometry::FIndex3i v : {
 		UE::Geometry::FIndex3i(6, 1, 0),
@@ -110,5 +76,39 @@ void ARoomGenerator::GenerateCube(const TArray<FWall> &Walls)
 		DynamicMesh3.AppendTriangle(v);
 	}
 
-	MeshComponent->SetMesh(MoveTemp(DynamicMesh3));
+	return DynamicMesh3;
+}
+
+void ARoomGenerator::GenerateRoom(const TArray<FWall> &Walls)
+{
+	// Generate Walls
+	 for (const auto & [Transform, Subtract] : Walls)
+	 {
+	 	FDynamicMesh3 MeshA, MeshB;
+	 	MeshA.Copy(*TargetMesh);
+	 	MeshB = GenerateCube(Transform);
+	 	
+	 	for (const auto &SubTransform : Subtract)
+	 	{
+	 		auto MeshSub = GenerateCube(SubTransform);
+	 		auto SubBool = UE::Geometry::FMeshBoolean(&MeshB, &MeshSub, &MeshB,
+	 		UE::Geometry::FMeshBoolean::EBooleanOp::Difference);
+	 		SubBool.Compute();
+	 	}
+	 	
+		 auto UniBool = UE::Geometry::FMeshBoolean(&MeshA, &MeshB, TargetMesh,
+		 	UE::Geometry::FMeshBoolean::EBooleanOp::Union);
+	 	UniBool.Compute();
+	 }
+	
+	MeshComponent->SetMesh(MoveTemp(*TargetMesh));
+
+	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
+	Path = FPaths::Combine(Path, "/StarterContent/Materials/DefaultMaterial");
+	Material = LoadObject<UMaterial>(nullptr, *Path);
+
+	if (Material != nullptr)
+	{
+		MeshComponent->SetMaterial(0, Material);
+	}
 }

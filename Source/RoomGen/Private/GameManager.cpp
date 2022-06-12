@@ -30,7 +30,7 @@ void AGameManager::BeginPlay()
 
 	// Building Mesh
 	auto* RoomGenerator = GetWorld()->SpawnActor<ARoomGenerator>();
-	RoomGenerator->GenerateCube(Walls);
+	RoomGenerator->GenerateRoom(Walls);
 	
 #ifdef UE_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *Str));
