@@ -2,20 +2,26 @@
 
 #include "RoomGenerator.h"
 #include "KismetProceduralMeshLibrary.h"
+#include "ProceduralMeshComponent.h"
+#include "DynamicMesh/MeshNormals.h"
 #include "Operations/MeshBoolean.h"
+#include "Operations/PolygroupRemesh.h"
+#include "ConstrainedDelaunay2.h"
+#include "Parameterization/UVPacking.h"
 
 ARoomGenerator::ARoomGenerator()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	TargetMesh = new FDynamicMesh3;
+	TargetMesh = new FDynamicMesh3(true, true, true, false);
 	
 	MeshComponent = CreateDefaultSubobject<UDynamicMeshComponent>(TEXT("Dynamic Mesh Component"));
+	MeshComponent->SetCastShadow(false);
 }
 
 FDynamicMesh3 ARoomGenerator::GenerateCube(const FKube &Transform)
 {
-	UE::Geometry::FDynamicMesh3 DynamicMesh3;
+	FDynamicMesh3 DynamicMesh3;
 	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.Y,       Transform.Z)); // 0
 	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.Y,       Transform.Z)); // 1
 	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.YOff,    Transform.Z)); // 2
@@ -48,7 +54,7 @@ FDynamicMesh3 ARoomGenerator::GenerateCube(const FKube &Transform)
 
 void ARoomGenerator::GenerateRoom(const TArray<FWall> &Walls)
 {
-	// Generate Walls
+	// Generate Walls, probably FMeshSelfUnion could be used...
 	 for (const auto & [Transform, Subtract] : Walls)
 	 {
 	 	FDynamicMesh3 MeshA, MeshB;
@@ -68,8 +74,31 @@ void ARoomGenerator::GenerateRoom(const TArray<FWall> &Walls)
 	 	UniBool.Compute();
 	 }
 	
-	MeshComponent->SetMesh(MoveTemp(*TargetMesh));
+	// UKismetProceduralMeshLibrary::CalculateTangentsForMesh(Vertices, Triangles, UVCoords, Normals, Tangents);
+	// MeshComponent->CreateMeshSection(0, Vertices, Triangles, Normals, UVCoords, TArray<FColor>(), Tangents, true);
 
+	if (!TargetMesh->CheckValidity())
+	{
+		UE::Geometry::FGroupTopology Topology(TargetMesh, true);
+		UE::Geometry::FPolygroupRemesh Remesh(TargetMesh, &Topology, UE::Geometry::ConstrainedDelaunayTriangulate<double>);
+		Remesh.Compute();
+	}
+	
+	// UStaticMesh StaticMesh;
+	//
+	//
+	// TArray<FVector> TmpVertices;
+	// TArray<int32> TmpTriangles;
+	//
+	// for (FVector3d Vert : TargetMesh->VerticesItr() )
+	// 	TmpVertices.Add(Vert);
+	// for (int Triangle : TargetMesh->TriangleIndicesItr())
+	// 	TmpTriangles.Add(Triangle);
+	//
+	// UKismetProceduralMeshLibrary::CalculateTangentsForMesh(TmpVertices, TmpTriangles, UVCoords, Normals, Tangents);
+	
+	MeshComponent->SetMesh(MoveTemp(*TargetMesh));
+	
 	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
 	Path = FPaths::Combine(Path, "/StarterContent/Materials/DefaultMaterial");
 	Material = LoadObject<UMaterial>(nullptr, *Path);

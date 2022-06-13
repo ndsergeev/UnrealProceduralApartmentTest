@@ -20,7 +20,8 @@ public class RoomGen : ModuleRules
             "ProceduralMeshComponent",
             "RHI",
             "RenderCore",
-            "GeometryCore"
+            "GeometryCore",
+            "GeometryAlgorithms"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] { });

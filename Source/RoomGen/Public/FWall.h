@@ -23,6 +23,30 @@ struct FKube
 	float YOff = 0;
 	UPROPERTY()
 	float ZOff = 0;
+
+	inline bool IsValid() const
+	{
+		return X < XOff && Y < YOff && Z < ZOff;
+	}
+	
+	void TrySwap()
+	{
+		if (X > XOff && Y > YOff && Z > ZOff)
+		{
+			Swap(X, XOff);
+			Swap(Y, YOff);
+			Swap(Z, ZOff);
+		}
+	}
+	
+private:
+	template<class T>
+	inline void Swap(T A, T B)
+	{
+		T Tmp = A;
+		A = B;
+		B = Tmp;
+	}
 };
 
 USTRUCT()
