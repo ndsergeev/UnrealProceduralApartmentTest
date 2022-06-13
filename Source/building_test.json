@@ -1,25 +1,156 @@
 [
-  {
+  { 
     "Transform" : {
       "X" : 0,
       "Y" : 0,
       "Z" : 0,
 
       "XOff" : 100,
-      "YOff" : 20,
+      "YOff" : 5,
       "ZOff" : 50
     },
 
     "Subtract" : [
       {
         "Transform" : {
-          "X" : 10,
+          "X" : 30,
           "Y" : 0,
           "Z" : 0,
 
-          "XOff" : 30,
-          "YOff" : 20,
+          "XOff" : 50,
+          "YOff" : 5,
           "ZOff" : 40
+        }
+      },
+      {
+        "Transform" : {
+          "X" : 65,
+          "Y" : 0,
+          "Z" : 20,
+
+          "XOff" : 85,
+          "YOff" : 5,
+          "ZOff" : 40
+        }
+      }
+    ]
+  },
+
+  {
+    "Transform" : {
+      "X" : 0,
+      "Y" : 0,
+      "Z" : 0,
+
+      "XOff" : 5,
+      "YOff" : 200,
+      "ZOff" : 50
+    },
+
+    "Subtract" : [
+      {
+        "Transform": {
+          "X": 0,
+          "Y": 40,
+          "Z": 20,
+          
+          "XOff": 5,
+          "YOff": 60,
+          "ZOff": 40
+        }
+      },
+      {
+        "Transform": {
+          "X": 0,
+          "Y": 140,
+          "Z": 20,
+          
+          "XOff": 5,
+          "YOff": 160,
+          "ZOff": 40
+        }
+      }
+    ]
+  },
+  {
+    "Transform": {
+      "X": 0,
+      "Y": 195,
+      "Z": 0,
+      
+      "XOff": 100,
+      "YOff": 200,
+      "ZOff": 50
+    },
+    "Subtract" : [
+      {
+        "Transform": {
+          "X": 35,
+          "Y": 195,
+          "Z": 20,
+
+          "XOff": 65,
+          "YOff": 200,
+          "ZOff": 40
+        }
+      }
+    ]
+  },
+  {
+    "Transform": {
+      "X": 95,
+      "Y": 0,
+      "Z": 0,
+
+      "XOff": 100,
+      "YOff": 200,
+      "ZOff": 50
+    },
+    "Subtract" : [
+      {
+        "Transform": {
+          "X": 95,
+          "Y": 50,
+          "Z": 10,
+
+          "XOff": 100,
+          "YOff": 70,
+          "ZOff": 40
+        }
+      },
+      {
+        "Transform": {
+          "X": 95,
+          "Y": 120,
+          "Z": 10,
+
+          "XOff": 100,
+          "YOff": 140,
+          "ZOff": 40
+        }
+      }
+    ]
+  },
+  {
+    "Transform": {
+      "X": 0,
+      "Y": 95,
+      "Z": 0,
+
+      "XOff": 100,
+      "YOff": 100,
+      "ZOff": 50
+    },
+    "Subtract" : [
+      {
+        "Transform": {
+          "X": 60,
+          "Y": 95,
+          "Z": 0,
+
+          "XOff": 80,
+          "YOff": 100,
+          "ZOff": 40
         }
       }
     ]

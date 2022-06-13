@@ -11,39 +11,6 @@ ARoomGenerator::ARoomGenerator()
 	TargetMesh = new FDynamicMesh3;
 	
 	MeshComponent = CreateDefaultSubobject<UDynamicMeshComponent>(TEXT("Dynamic Mesh Component"));
-
-	for (const auto v : {
-		6, 1, 0,
-		7, 6, 0,
-		6, 7, 5,
-		7, 4, 5,
-		3, 4, 0,
-		4, 7, 0,
-		6, 5, 1,
-		5, 2, 1,
-		5, 4, 2,
-		4, 3, 2,
-		2, 3, 0,
-		1, 2, 0
-	})
-	{
-		Triangles.Add(v);
-	}
-	
-	UVCoords.Add(FVector2D(	 0.5f,		0));
-	UVCoords.Add(FVector2D(	0.25f,		0));
-	UVCoords.Add(FVector2D(	 0.5f,		1));
-	UVCoords.Add(FVector2D(	0.25f,		1));
-	UVCoords.Add(FVector2D(		1,	0.33f));
-	UVCoords.Add(FVector2D(		1,	0.66f));
-	UVCoords.Add(FVector2D(	0.75f,	0.33f));
-	UVCoords.Add(FVector2D(	0.75f,	0.66f));
-	UVCoords.Add(FVector2D(	 0.5f,	0.33f));
-	UVCoords.Add(FVector2D(	 0.5f,	0.66f));
-	UVCoords.Add(FVector2D(	0.25f,	0.33f));
-	UVCoords.Add(FVector2D(		0,	0.33f));
-	UVCoords.Add(FVector2D(	0.25f,	0.66f));
-	UVCoords.Add(FVector2D(		0,	0.66f));
 }
 
 FDynamicMesh3 ARoomGenerator::GenerateCube(const FKube &Transform)

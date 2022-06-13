@@ -25,20 +25,17 @@ public:
 	ARoomGenerator();
 
 protected:
-	UE::Geometry::FDynamicMesh3 *TargetMesh;
+	FDynamicMesh3 *TargetMesh;
+	
+	TArray<uint32> Triangles;
+	TArray<FVector2D> UVCoords;
+	TArray<FVector> Normals;
+	TArray<FProcMeshTangent> Tangents;
 	
 public:	
 	UPROPERTY(VisibleAnywhere)
 	// UProceduralMeshComponent* MeshComponent;
 	UDynamicMeshComponent* MeshComponent;
-
-	// this is for DynamicMesh3, it requires a different type
-	TArray<uint32> Triangles;
-	TArray<FVector2D> UVCoords;
-	TArray<FVector> Normals;
-	
-    TArray<FProcMeshTangent> Tangents;
-
 	UMaterial *Material;
 	
 	FDynamicMesh3 GenerateCube(const FKube &Transform);
