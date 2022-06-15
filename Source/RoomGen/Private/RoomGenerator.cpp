@@ -1,8 +1,6 @@
 // Nikita Sergeev
 
 #include "RoomGenerator.h"
-#include "KismetProceduralMeshLibrary.h"
-#include "ProceduralMeshComponent.h"
 #include "Operations/MeshBoolean.h"
 #include "Operations/PolygroupRemesh.h"
 #include "ConstrainedDelaunay2.h"
@@ -12,7 +10,6 @@ ARoomGenerator::ARoomGenerator()
 	PrimaryActorTick.bCanEverTick = false;
 
 	TargetMesh = new FDynamicMesh3(true, true, true, false);
-	// MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Dynamic Mesh Component"));
 	MeshComponent = CreateDefaultSubobject<UDynamicMeshComponent>(TEXT("Dynamic Mesh Component"));
 	MeshComponent->SetCastShadow(false);
 
@@ -90,9 +87,6 @@ void ARoomGenerator::GenerateRoom(const TArray<FWall> &Walls)
 		UniBool.Compute();
 	}
 	
-	// UKismetProceduralMeshLibrary::CalculateTangentsForMesh(Vertices, Triangles, UVCoords, Normals, Tangents);
-	// MeshComponent->CreateMeshSection(0, Vertices, Triangles, Normals, UVCoords, TArray<FColor>(), Tangents, true);
-
 	if (!TargetMesh->CheckValidity())
 	{
 		UE::Geometry::FGroupTopology Topology(TargetMesh, true);
@@ -100,7 +94,7 @@ void ARoomGenerator::GenerateRoom(const TArray<FWall> &Walls)
 		Remesh.Compute();
 	}
 
-	MeshComponent->SetMobility(EComponentMobility::Movable);
+	MeshComponent->SetMobility(EComponentMobility::Stationary);
 	MeshComponent->SetMesh(MoveTemp(*TargetMesh));
 	
 	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
@@ -137,8 +131,8 @@ void ARoomGenerator::SpawnWindow(const FKube &Transform)
 	TmpWindowComp->SetWorldScale3D(Transform.GetFrame(WindowSize));
 	TmpWindowComp->SetVisibility(true);
 
-	// TmpWindowComp->Mobility = EComponentMobility::Stationary;
-	TmpWindowComp->Mobility = EComponentMobility::Movable;
+	TmpWindowComp->Mobility = EComponentMobility::Stationary;
+	// TmpWindowComp->Mobility = EComponentMobility::Movable;
 	TmpWindowComp->bUseDefaultCollision = false;
 	TmpWindowComp->SetStaticMesh(WindowMesh);
 
@@ -160,8 +154,8 @@ void ARoomGenerator::SpawnDoor(const FKube &Transform)
 	
 	TmpDoorComp->SetVisibility(true);
 
-	// TmpDoorComp->Mobility = EComponentMobility::Stationary;
-	TmpDoorComp->Mobility = EComponentMobility::Movable;
+	TmpDoorComp->Mobility = EComponentMobility::Stationary;
+	// TmpDoorComp->Mobility = EComponentMobility::Movable;
 	TmpDoorComp->bUseDefaultCollision = false;
 	TmpDoorComp->SetStaticMesh(DoorMesh);
 	
