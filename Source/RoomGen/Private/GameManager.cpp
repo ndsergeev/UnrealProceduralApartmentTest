@@ -17,6 +17,7 @@ void AGameManager::BeginPlay()
     // 2. JSON File Attempt to open
     // 3. Parse Data from JSON to a struct
     // 4. Create a room based on the input as an Actor
+	// 5. Spawn Doors/Windows
 
 	// JSON to Struct parsing
 	FString FullPath = FPaths::ConvertRelativePathToFull(FPaths::GameSourceDir());
@@ -26,12 +27,8 @@ void AGameManager::BeginPlay()
 	const JSONParser JsonParser = JSONParser(FullFilepath);
 	TArray<FWall> Walls;
 	const FString Str = JsonParser.Parse(Walls) ?
-		"JSON Successfully generated" : "JSON was not generated";
+		"JSON Successfully parsed" : "JSON was Not parsed";
 
-	//TODO:
-	//add postprocessing of the struct with min/max vertex positions,
-	//so it is indifferent for the system how to draw parallelepiped 
-	
 	// Building Mesh
 	auto* RoomGenerator = GetWorld()->SpawnActor<ARoomGenerator>();
 	RoomGenerator->GenerateRoom(Walls);
