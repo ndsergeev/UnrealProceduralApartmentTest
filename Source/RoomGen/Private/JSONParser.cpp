@@ -47,6 +47,9 @@ bool JSONParser::Parse(TArray<FWall> &Walls) const
 inline void JSONParser::SetTransform(FKube &Transform, const TSharedPtr<FJsonObject> &Obj)
 {
     const TSharedPtr<FJsonObject> SubtractTransformObj = Obj->GetObjectField("Transform");
+    Transform.Type = SubtractTransformObj->GetIntegerField("Type");
+    Transform.Rot  = SubtractTransformObj->GetIntegerField("Rot");
+    
     Transform.X    = SubtractTransformObj->GetNumberField("X");
     Transform.Y    = SubtractTransformObj->GetNumberField("Y");
     Transform.Z    = SubtractTransformObj->GetNumberField("Z");
@@ -54,4 +57,6 @@ inline void JSONParser::SetTransform(FKube &Transform, const TSharedPtr<FJsonObj
     Transform.XOff = SubtractTransformObj->GetNumberField("XOff");
     Transform.YOff = SubtractTransformObj->GetNumberField("YOff");
     Transform.ZOff = SubtractTransformObj->GetNumberField("ZOff");
+
+    Transform.TrySwap();
 }

@@ -2,95 +2,45 @@
 
 #include "RoomGenerator.h"
 #include "KismetProceduralMeshLibrary.h"
+#include "ProceduralMeshComponent.h"
+#include "Operations/MeshBoolean.h"
+#include "Operations/PolygroupRemesh.h"
+#include "ConstrainedDelaunay2.h"
 
 ARoomGenerator::ARoomGenerator()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	
-	// MeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Dynamic Mesh Component"));
-	MeshComponent = CreateDefaultSubobject<UDynamicMeshComponent>(TEXT("Dynamic Mesh Component"));
 
-	for (const auto v : {
-		6, 1, 0,
-		7, 6, 0,
-		6, 7, 5,
-		7, 4, 5,
-		3, 4, 0,
-		4, 7, 0,
-		6, 5, 1,
-		5, 2, 1,
-		5, 4, 2,
-		4, 3, 2,
-		2, 3, 0,
-		1, 2, 0
-	})
+	TargetMesh = new FDynamicMesh3(true, true, true, false);
+	// MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Dynamic Mesh Component"));
+	MeshComponent = CreateDefaultSubobject<UDynamicMeshComponent>(TEXT("Dynamic Mesh Component"));
+	MeshComponent->SetCastShadow(false);
+
+	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
+	const auto WindowPath = FPaths::Combine(Path, "/StarterContent/Meshes/Window");
+	// if (FPaths::FileExists(WindowPath))
 	{
-		Triangles.Add(v);
+		WindowMesh = LoadObject<UStaticMesh>(nullptr, *WindowPath);
 	}
 	
-	UVCoords.Add(FVector2D(	 0.5f,		0));
-	UVCoords.Add(FVector2D(	0.25f,		0));
-	UVCoords.Add(FVector2D(	 0.5f,		1));
-	UVCoords.Add(FVector2D(	0.25f,		1));
-	UVCoords.Add(FVector2D(		1,	0.33f));
-	UVCoords.Add(FVector2D(		1,	0.66f));
-	UVCoords.Add(FVector2D(	0.75f,	0.33f));
-	UVCoords.Add(FVector2D(	0.75f,	0.66f));
-	UVCoords.Add(FVector2D(	 0.5f,	0.33f));
-	UVCoords.Add(FVector2D(	 0.5f,	0.66f));
-	UVCoords.Add(FVector2D(	0.25f,	0.33f));
-	UVCoords.Add(FVector2D(		0,	0.33f));
-	UVCoords.Add(FVector2D(	0.25f,	0.66f));
-	UVCoords.Add(FVector2D(		0,	0.66f));
+	const auto DoorPath = FPaths::Combine(Path, "/StarterContent/Meshes/Door");
+	// if (FPaths::FileExists(DoorPath))
+	{
+		DoorMesh = LoadObject<UStaticMesh>(nullptr, *DoorPath);	
+	}
 }
 
-void ARoomGenerator::GenerateCube(const TArray<FWall> &Walls)
+FDynamicMesh3 ARoomGenerator::GenerateCube(const FKube &Transform)
 {
-// #ifdef UE_EDITOR
-// 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("GenerateCube, Have read the Struct, size: %i"), Walls.Num()));
-// #endif
-//
-// 	// TODO: this should be replaced with dynamic mesh...
-// 	TArray<FVector> Vertices;
-// 	Vertices.Add(FVector(0,   0,     0)); // 0
-// 	Vertices.Add(FVector(100, 0,     0)); // 1
-// 	Vertices.Add(FVector(100, 100,   0)); // 2
-// 	Vertices.Add(FVector(0,   100,   0)); // 3
-// 	Vertices.Add(FVector(0,   100, 100)); // 4
-// 	Vertices.Add(FVector(100, 100, 100)); // 5
-// 	Vertices.Add(FVector(100, 0,   100)); // 6
-// 	Vertices.Add(FVector(0,   0,   100)); // 7
-// 	
-// 	UKismetProceduralMeshLibrary::CalculateTangentsForMesh(Vertices, Triangles, UVCoords, Normals, Tangents);
-// 	MeshComponent->CreateMeshSection(0, Vertices, Triangles, Normals, UVCoords, TArray<FColor>(), Tangents, false);
-//
-//
-// 	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
-// 	Path = FPaths::Combine(Path, "/StarterContent/Materials/DefaultMaterial");
-// 	Material = LoadObject<UMaterial>(nullptr, *Path);
-// 	
-// 	if (Material != nullptr)
-// 	{
-// 		MeshComponent->SetMaterial(0, Material);
-// 	}
-// #ifdef UE_EDITOR
-// 	else
-// 	{
-// 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("IT DOES NOT WORK")));
-// 		// UE_LOG(LogTemp, Warning, TEXT("PATH: %s"), *Str);
-// 	}
-// #endif
-// 	
-	//TODO: I wish I can make the line below work...
-	UE::Geometry::FDynamicMesh3 DynamicMesh3;
-	DynamicMesh3.AppendVertex(FVector3d(0,   0,     0)); // 0
-	DynamicMesh3.AppendVertex(FVector3d(100, 0,     0)); // 1
-	DynamicMesh3.AppendVertex(FVector3d(100, 100,   0)); // 2
-	DynamicMesh3.AppendVertex(FVector3d(0,   100,   0)); // 3
-	DynamicMesh3.AppendVertex(FVector3d(0,   100, 100)); // 4
-	DynamicMesh3.AppendVertex(FVector3d(100, 100, 100)); // 5
-	DynamicMesh3.AppendVertex(FVector3d(100, 0,   100)); // 6
-	DynamicMesh3.AppendVertex(FVector3d(0,   0,   100)); // 7
+	FDynamicMesh3 DynamicMesh3;
+	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.Y,       Transform.Z)); // 0
+	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.Y,       Transform.Z)); // 1
+	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.YOff,    Transform.Z)); // 2
+	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.YOff,    Transform.Z)); // 3
+	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.YOff, Transform.ZOff)); // 4
+	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.YOff, Transform.ZOff)); // 5
+	DynamicMesh3.AppendVertex(FVector3d(Transform.XOff, Transform.Y,    Transform.ZOff)); // 6
+	DynamicMesh3.AppendVertex(FVector3d(Transform.X,    Transform.Y,    Transform.ZOff)); // 7
 	
 	for (UE::Geometry::FIndex3i v : {
 		UE::Geometry::FIndex3i(6, 1, 0),
@@ -110,5 +60,110 @@ void ARoomGenerator::GenerateCube(const TArray<FWall> &Walls)
 		DynamicMesh3.AppendTriangle(v);
 	}
 
-	MeshComponent->SetMesh(MoveTemp(DynamicMesh3));
+	return DynamicMesh3;
+}
+
+void ARoomGenerator::GenerateRoom(const TArray<FWall> &Walls)
+{
+	// Generate Walls, probably FMeshSelfUnion could be used...
+	for (const auto & [Transform, Subtract] : Walls)
+	{
+		FDynamicMesh3 MeshA, MeshB;
+		MeshA.Copy(*TargetMesh);
+		MeshB = GenerateCube(Transform);
+	 	
+		for (const auto &SubTransform : Subtract)
+		{
+			auto MeshSub = GenerateCube(SubTransform);
+			auto SubBool = UE::Geometry::FMeshBoolean(&MeshB, &MeshSub, &MeshB,
+			UE::Geometry::FMeshBoolean::EBooleanOp::Difference);
+			SubBool.Compute();
+
+			if (SubTransform.Type == 1)
+				SpawnWindow(SubTransform);
+			if (SubTransform.Type == 2)
+				SpawnDoor(SubTransform);
+		}
+	 	
+		auto UniBool = UE::Geometry::FMeshBoolean(&MeshA, &MeshB, TargetMesh,
+			UE::Geometry::FMeshBoolean::EBooleanOp::Union);
+		UniBool.Compute();
+	}
+	
+	// UKismetProceduralMeshLibrary::CalculateTangentsForMesh(Vertices, Triangles, UVCoords, Normals, Tangents);
+	// MeshComponent->CreateMeshSection(0, Vertices, Triangles, Normals, UVCoords, TArray<FColor>(), Tangents, true);
+
+	if (!TargetMesh->CheckValidity())
+	{
+		UE::Geometry::FGroupTopology Topology(TargetMesh, true);
+		UE::Geometry::FPolygroupRemesh Remesh(TargetMesh, &Topology, UE::Geometry::ConstrainedDelaunayTriangulate<double>);
+		Remesh.Compute();
+	}
+
+	MeshComponent->SetMobility(EComponentMobility::Movable);
+	MeshComponent->SetMesh(MoveTemp(*TargetMesh));
+	
+	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
+	Path = FPaths::Combine(Path, "/StarterContent/Materials/DefaultMaterial");
+	Material = LoadObject<UMaterial>(nullptr, *Path);
+
+	if (Material != nullptr)
+	{
+		MeshComponent->SetMaterial(0, Material);
+	}
+}
+
+/**
+ * @brief It was a very simple 1-min-model made in blender that I
+ * stretch based Subtract shape.
+ * @param Transform - Subtract in JSON with Type '1'
+ */
+void ARoomGenerator::SpawnWindow(const FKube &Transform)
+{
+	if (WindowMesh == nullptr)
+		return;
+
+	// I know it is better to cache it in the class declaration, I trust compiler...
+	constexpr float WindowSize = 20;
+	
+	UStaticMeshComponent* TmpWindowComp = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass());
+	TmpWindowComp->RegisterComponent();
+	TmpWindowComp->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	TmpWindowComp->SetWorldLocation(Transform.GetCenter());
+
+	const auto Rot = FQuat::MakeFromEuler(FVector(0, 0, Transform.Rot));
+	TmpWindowComp->SetWorldRotation(Rot);
+
+	TmpWindowComp->SetWorldScale3D(Transform.GetFrame(WindowSize));
+	TmpWindowComp->SetVisibility(true);
+
+	// TmpWindowComp->Mobility = EComponentMobility::Stationary;
+	TmpWindowComp->Mobility = EComponentMobility::Movable;
+	TmpWindowComp->bUseDefaultCollision = false;
+	TmpWindowComp->SetStaticMesh(WindowMesh);
+
+	Windows.Add(TmpWindowComp);
+}
+
+void ARoomGenerator::SpawnDoor(const FKube &Transform)
+{
+	if (DoorMesh == nullptr)
+		return;
+	
+	UStaticMeshComponent* TmpDoorComp = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass());
+	TmpDoorComp->RegisterComponent();
+	TmpDoorComp->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	TmpDoorComp->SetWorldLocation(Transform.GetCenter());
+
+	const auto Rot = FQuat::MakeFromEuler(FVector(0, 0, Transform.Rot));
+	TmpDoorComp->SetWorldRotation(Rot);
+	
+	TmpDoorComp->SetVisibility(true);
+
+	// TmpDoorComp->Mobility = EComponentMobility::Stationary;
+	TmpDoorComp->Mobility = EComponentMobility::Movable;
+	TmpDoorComp->bUseDefaultCollision = false;
+	TmpDoorComp->SetStaticMesh(DoorMesh);
+	
+	Doors.Add(TmpDoorComp);
 }
