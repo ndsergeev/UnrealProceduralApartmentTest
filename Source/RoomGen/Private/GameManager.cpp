@@ -20,11 +20,11 @@ void AGameManager::BeginPlay()
 	// 5. Spawn Doors/Windows
 
 	// JSON to Struct parsing
-	FString FullPath = FPaths::ConvertRelativePathToFull(FPaths::GameSourceDir());
 	const FString Filename = "building_test.json";
-	const FString FullFilepath = FPaths::Combine(FullPath, Filename);
+	const FString Path =FPaths::Combine(*FPaths::ProjectContentDir(), "StarterContent/Config");
+	const FString FullPath = FPaths::Combine(*Path, *Filename);
+	const JSONParser JsonParser = JSONParser(FullPath);
 	
-	const JSONParser JsonParser = JSONParser(FullFilepath);
 	TArray<FWall> Walls;
 	const FString Str = JsonParser.Parse(Walls) ?
 		"JSON Successfully parsed" : "JSON was Not parsed";
