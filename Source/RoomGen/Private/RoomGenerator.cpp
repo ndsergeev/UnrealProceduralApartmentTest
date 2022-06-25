@@ -14,13 +14,13 @@ ARoomGenerator::ARoomGenerator()
 	MeshComponent->SetCastShadow(false);
 
 	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
-	const auto WindowPath = FPaths::Combine(Path, "/StarterContent/Meshes/Window");
+	const auto WindowPath = FPaths::Combine(Path, "StaticMesh'/Game/StarterContent/Meshes/Window.Window'");
 	// if (FPaths::FileExists(WindowPath))
 	{
 		WindowMesh = LoadObject<UStaticMesh>(nullptr, *WindowPath);
 	}
 	
-	const auto DoorPath = FPaths::Combine(Path, "/StarterContent/Meshes/Door");
+	const auto DoorPath = FPaths::Combine(Path, "StaticMesh'/Game/StarterContent/Meshes/Door.Door'");
 	// if (FPaths::FileExists(DoorPath))
 	{
 		DoorMesh = LoadObject<UStaticMesh>(nullptr, *DoorPath);	
@@ -76,10 +76,13 @@ void ARoomGenerator::GenerateRoom(const TArray<FWall> &Walls)
 			UE::Geometry::FMeshBoolean::EBooleanOp::Difference);
 			SubBool.Compute();
 
-			if (SubTransform.Type == 1)
-				SpawnWindow(SubTransform);
-			if (SubTransform.Type == 2)
-				SpawnDoor(SubTransform);
+			switch (SubTransform.Type)
+			{
+				case 1: SpawnWindow(SubTransform);
+					break;
+				case 2: SpawnDoor(SubTransform);
+					break;
+			}
 		}
 	 	
 		auto UniBool = UE::Geometry::FMeshBoolean(&MeshA, &MeshB, TargetMesh,
@@ -98,7 +101,7 @@ void ARoomGenerator::GenerateRoom(const TArray<FWall> &Walls)
 	MeshComponent->SetMesh(MoveTemp(*TargetMesh));
 	
 	auto Path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
-	Path = FPaths::Combine(Path, "/StarterContent/Materials/DefaultMaterial");
+	Path = FPaths::Combine(Path, "Material'/Game/StarterContent/Materials/DefaultMaterial.DefaultMaterial'");
 	Material = LoadObject<UMaterial>(nullptr, *Path);
 
 	if (Material != nullptr)
